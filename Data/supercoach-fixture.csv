@@ -1,0 +1,41 @@
+home_team,away_team,venue,round,start_date
+Brisbane Heat,Melbourne Stars,Brisbane Cricket Ground,1,2023-12-07T08:15:00Z
+Sydney Sixers,Melbourne Renegades,Sydney Cricket Ground,1,2023-12-08T08:15:00Z
+Adelaide Strikers,Brisbane Heat,Adelaide Oval,1,2023-12-09T08:15:00Z
+Melbourne Renegades,Perth Scorchers,Kardinia Park,1,2023-12-10T08:15:00Z
+Hobart Hurricanes,Sydney Sixers,University of Tasmania Stadium,1,2023-12-11T08:15:00Z
+Sydney Thunder,Brisbane Heat,Manuka Oval,1,2023-12-12T08:15:00Z
+Melbourne Stars,Perth Scorchers,Melbourne Cricket Ground,1,2023-12-13T08:15:00Z
+Adelaide Strikers,Sydney Thunder,Adelaide Oval,2,2023-12-19T08:15:00Z
+Perth Scorchers,Hobart Hurricanes,Perth Stadium,2,2023-12-20T08:15:00Z
+Melbourne Renegades,Brisbane Heat,Docklands Stadium,2,2023-12-21T08:15:00Z
+Sydney Sixers,Adelaide Strikers,Sydney Cricket Ground,2,2023-12-22T08:15:00Z
+Melbourne Stars,Sydney Thunder,Lavington Sports Ground,3,2023-12-23T04:30:00Z
+Hobart Hurricanes,Melbourne Renegades,Bellerive Oval,3,2023-12-23T08:15:00Z
+Sydney Sixers,Melbourne Stars,Sydney Cricket Ground,3,2023-12-26T07:05:00Z
+Perth Scorchers,Melbourne Renegades,Perth Stadium,3,2023-12-26T10:15:00Z
+Brisbane Heat,Sydney Thunder,Brisbane Cricket Ground,4,2023-12-27T08:15:00Z
+Hobart Hurricanes,Melbourne Stars,Bellerive Oval,4,2023-12-28T08:15:00Z
+Melbourne Renegades,Adelaide Strikers,Docklands Stadium,4,2023-12-29T08:15:00Z
+Sydney Thunder,Sydney Sixers,Sydney Showground Stadium,4,2023-12-30T08:15:00Z
+Adelaide Strikers,Melbourne Stars,Adelaide Oval,5,2023-12-31T08:15:00Z
+Hobart Hurricanes,Sydney Thunder,Bellerive Oval,5,2024-01-01T05:00:00Z
+Brisbane Heat,Sydney Sixers,Brisbane Cricket Ground,5,2024-01-01T08:15:00Z
+Melbourne Stars,Melbourne Renegades,Melbourne Cricket Ground,5,2024-01-02T08:15:00Z
+Sydney Sixers,Brisbane Heat,C.ex Coffs International Stadium,6,2024-01-03T07:05:00Z
+Perth Scorchers,Adelaide Strikers,Perth Stadium,6,2024-01-03T10:15:00Z
+Melbourne Renegades,Hobart Hurricanes,Docklands Stadium,6,2024-01-04T08:15:00Z
+Adelaide Strikers,Perth Scorchers,Adelaide Oval,6,2024-01-05T08:15:00Z
+Melbourne Stars,Sydney Sixers,Melbourne Cricket Ground,7,2024-01-06T08:15:00Z
+Brisbane Heat,Hobart Hurricanes,Brisbane Cricket Ground,7,2024-01-07T08:15:00Z
+Sydney Thunder,Perth Scorchers,Sydney Showground Stadium,7,2024-01-08T08:15:00Z
+Adelaide Strikers,Hobart Hurricanes,Adelaide Oval,7,2024-01-09T08:40:00Z
+Brisbane Heat,Perth Scorchers,Brisbane Cricket Ground,7,2024-01-10T08:40:00Z
+Hobart Hurricanes,Adelaide Strikers,Bellerive Oval,8,2024-01-11T08:15:00Z
+Sydney Sixers,Sydney Thunder,Sydney Cricket Ground,8,2024-01-12T08:15:00Z
+Perth Scorchers,Brisbane Heat,Perth Stadium,8,2024-01-13T05:15:00Z
+Melbourne Renegades,Melbourne Stars,Docklands Stadium,8,2024-01-13T08:30:00Z
+Sydney Thunder,Adelaide Strikers,Manuka Oval,9,2024-01-14T08:15:00Z
+Melbourne Stars,Hobart Hurricanes,Melbourne Cricket Ground,9,2024-01-15T08:15:00Z
+Perth Scorchers,Sydney Sixers,Perth Stadium,9,2024-01-16T08:40:00Z
+Sydney Thunder,Melbourne Renegades,Sydney Showground Stadium,9,2024-01-17T08:15:00Z

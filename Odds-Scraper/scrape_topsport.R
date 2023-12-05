@@ -231,6 +231,49 @@ if (length(player_runs_markets) > 0) {
     left_join(all_matches, by = c("player_team" = "team")) |>
     select(match, start_date, market_name, player_name, line, over_price, under_price, agency)
   }
+  
+# Write out all player runs
+player_runs <- 
+  player_runs_alternate |>
+  bind_rows(player_runs_lines) |>
+  mutate(over_price = as.numeric(over_price)) |>
+  mutate(under_price = as.numeric(under_price)) |>
+  mutate(market_name = "Player Runs") |>
+  mutate(agency = "TopSport") |>
+  separate(
+    match,
+    into = c("home_team", "away_team"),
+    sep = " v ",
+    remove = FALSE
+  ) |>
+  left_join(player_teams[, c("player_name", "player_team")], by = "player_name") |>
+  mutate(
+    opposition_team = case_when(
+      player_team == home_team ~ away_team,
+      player_team == away_team ~ home_team
+    )
+  ) |>
+  select(
+    match,
+    market = market_name,
+    home_team,
+    away_team,
+    player_name,
+    player_team,
+    opposition_team,
+    line,
+    over_price,
+    under_price,
+    agency
+  ) |> 
+  arrange(player_name, line)
+
+player_runs |> 
+  write_csv("Data/scraped_odds/topsport_player_runs.csv")
+
+#===============================================================================
+# Player Wickets
+#===============================================================================
 
 # Get data for pick your own bowler wickets-------------------------------------
 
@@ -302,6 +345,50 @@ if (length(player_wickets_markets) > 0) {
     left_join(all_matches, by = c("player_team" = "team")) |>
     select(match, start_date, market_name, player_name, line, over_price, under_price, agency)
 }
+
+# Write out all player wickets
+player_wickets <- 
+  player_wickets_alternate |>
+  bind_rows(player_wickets_lines) |>
+  mutate(over_price = as.numeric(over_price)) |>
+  mutate(under_price = as.numeric(under_price)) |>
+  mutate(market_name = "Player Wickets") |>
+  mutate(agency = "TopSport") |>
+  separate(
+    match,
+    into = c("home_team", "away_team"),
+    sep = " v ",
+    remove = FALSE
+  ) |>
+  left_join(player_teams[, c("player_name", "player_team")], by = "player_name") |>
+  mutate(
+    opposition_team = case_when(
+      player_team == home_team ~ away_team,
+      player_team == away_team ~ home_team
+    )
+  ) |>
+  select(
+    match,
+    market = market_name,
+    home_team,
+    away_team,
+    player_name,
+    player_team,
+    opposition_team,
+    line,
+    over_price,
+    under_price,
+    agency
+  ) |> 
+  arrange(player_name, line) |> 
+  distinct(match, player_name, player_team, opposition_team, line, over_price, under_price, .keep_all = TRUE)
+
+player_wickets |> 
+  write_csv("Data/scraped_odds/topsport_player_wickets.csv")
+
+#===============================================================================
+# Boundaries
+#===============================================================================
 
 # Get data for pick your own fours----------------------------------------------
 

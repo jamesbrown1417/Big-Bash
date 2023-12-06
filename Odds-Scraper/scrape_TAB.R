@@ -3,11 +3,58 @@ library(tidyverse)
 library(rvest)
 library(httr2)
 
-# Get player names--------------------------------------------------------------
-bbl_player_names_23 <-
-  read_rds("Data/player_names_teams_bbl.rds") |> 
-  filter(season == "2023/24") |> 
-  select(-season)
+# Get fixture and player team data
+player_teams <- read_csv("Data/supercoach-data.csv")
+fixture <- read_csv("Data/supercoach-fixture.csv")
+
+# Get each teams next match
+home_matches <-
+  fixture |>
+  mutate(match = paste(home_team, "v", away_team)) |>
+  select(team = home_team, match, start_date) |>
+  mutate(start_date = start_date + hours(10) + minutes(30)) |>  
+  filter(start_date >= today())
+
+away_matches <-
+  fixture |>
+  mutate(match = paste(home_team, "v", away_team)) |>
+  select(team = away_team, match, start_date) |>
+  mutate(start_date = start_date + hours(10) + minutes(30)) |>  
+  filter(start_date >= today())
+
+# Combine together
+all_matches <-
+  bind_rows(home_matches, away_matches) |>
+  arrange(team, start_date) |> 
+  group_by(team) |> 
+  slice_head(n = 1) |> 
+  ungroup()
+
+# Fix certain problematic player names
+player_teams <-
+  player_teams |>
+  mutate(
+    player_name = if_else(
+      player_name == "Tom Rogers" &
+        player_team == "Melbourne Stars",
+      "Tom F Rogers",
+      player_name
+    )
+  )
+
+# Make initial variable
+player_teams_initials <-
+  player_teams |> 
+  mutate(player_name_full = player_name) |> 
+  mutate(player_name = paste(str_sub(player_first_name, 1, 1), player_last_name)) |> 
+  mutate(
+    player_name = if_else(
+      player_name == "T Rogers" &
+        player_team == "Melbourne Stars",
+      "T F Rogers",
+      player_name
+    )
+  )
 
 # URL to get responses
 tab_url = "https://api.beta.tab.com.au/v1/recommendation-service/Cricket/featured?homeState=SA&jurisdiction=SA"
@@ -55,9 +102,12 @@ tab_competitions <-
   tab_response$competitions |> 
   map(~ .x$name)
 
+# Get element of competitions that equals "Big Bash"
+bbl_index <- which(tab_competitions == "Big Bash")
+
 # Map functions to data
 all_tab_markets <-
-  map(tab_response$competitions[[1]]$matches, get_match_info) |> bind_rows()
+  map(tab_response$competitions[[bbl_index]]$matches, get_match_info) |> bind_rows()
 
 # Expand list col into multiple cols
 all_tab_markets <-
@@ -81,6 +131,9 @@ head_to_head <-
   mutate(match = str_replace_all(match, "AdelaideStrikers", "Adelaide Strikers")) |> 
   mutate(match = str_replace_all(match, "Melb Renegades", "Melbourne Renegades"))
 
+# Write to csv
+write_csv(head_to_head, "Data/scraped_odds/tab_h2h.csv")
+
 #==============================================================================
 # Player Runs Over / Under
 #==============================================================================
@@ -95,47 +148,37 @@ player_runs_over_under <-
 # Get Overs
 player_runs_overs <-
   player_runs_over_under |> 
-  filter(str_detect(prop_name, "over")) |>
-  separate(prop_name, into = c("player", "line"), sep = " over ") |>
-  mutate(line = str_remove(line, " runs")) |>
+  filter(str_detect(prop_name, "Over")) |>
+  separate(prop_name, into = c("player_name", "line"), sep = " Over ") |>
+  mutate(line = str_remove(line, " Runs")) |>
   mutate(line = as.numeric(line)) |> 
-  mutate(player = case_when(player == "G Harris" ~ "GM Harris",
-                            player == "C Athapthu" ~ "AC Jayangani",
-                            player == "K Mack" ~ "KM Mack",
-                            player == "S Devine" ~ "SFM Devine",
-                            player == "B Mooney" ~ "BL Mooney",
-                            player == "H Mathews" ~ "HK Matthews",
-                            player == "T Beaumont" ~ "TT Beaumont",
-                            player == "M Bouchier" ~ "ME Bouchier",
-                            player == "S Dunkley" ~ "SIR Dunkley",
-                            .default = player)) |>
-  left_join(bbl_player_names_23) |> 
-  rename(over_price = price, player_team = team) |> 
+  mutate(player_name = case_when(player_name == "M Labschagne" ~ "M Labuschagne",
+                                 player_name == "J F McGurk" ~ "J Fraser-McGurk",
+                                 player_name == "T Rogers" ~ "T F Rogers",
+                            .default = player_name)) |>
+  left_join(player_teams_initials[,c("player_name", "player_name_full", "player_team")]) |> 
+  select(-player_name) |> 
+  rename(over_price = price, player_name = player_name_full) |> 
   separate(match, into = c("home", "away"), sep = " v ", remove = FALSE) |>
-  mutate(oppposition_team = case_when(player_team == home ~ away,
+  mutate(opposition_team = case_when(player_team == home ~ away,
                                       player_team == away ~ home))
 
 # Get Unders
 player_runs_unders <-
   player_runs_over_under |> 
-  filter(str_detect(prop_name, "under")) |>
-  separate(prop_name, into = c("player", "line"), sep = " under ") |>
-  mutate(line = str_remove(line, " runs")) |>
+  filter(str_detect(prop_name, "Under")) |>
+  separate(prop_name, into = c("player_name", "line"), sep = " Under ") |>
+  mutate(line = str_remove(line, " Runs")) |>
   mutate(line = as.numeric(line)) |> 
-  mutate(player = case_when(player == "G Harris" ~ "GM Harris",
-                            player == "C Athapthu" ~ "AC Jayangani",
-                            player == "K Mack" ~ "KM Mack",
-                            player == "S Devine" ~ "SFM Devine",
-                            player == "B Mooney" ~ "BL Mooney",
-                            player == "H Mathews" ~ "HK Matthews",
-                            player == "T Beaumont" ~ "TT Beaumont",
-                            player == "M Bouchier" ~ "ME Bouchier",
-                            player == "S Dunkley" ~ "SIR Dunkley",
-                            .default = player)) |>
-  left_join(bbl_player_names_23) |> 
-  rename(under_price = price, player_team = team) |> 
+  mutate(player_name = case_when(player_name == "M Labschagne" ~ "M Labuschagne",
+                                 player_name == "J F McGurk" ~ "J Fraser-McGurk",
+                                 player_name == "T Rogers" ~ "T F Rogers",
+                                 .default = player_name)) |>
+  left_join(player_teams_initials[,c("player_name", "player_name_full", "player_team")]) |> 
+  select(-player_name) |> 
+  rename(under_price = price, player_name = player_name_full) |> 
   separate(match, into = c("home", "away"), sep = " v ", remove = FALSE) |>
-  mutate(oppposition_team = case_when(player_team == home ~ away,
+  mutate(opposition_team = case_when(player_team == home ~ away,
                                       player_team == away ~ home))
 # Combine
 player_runs_over_under <-
@@ -143,16 +186,17 @@ player_runs_over_under <-
   left_join(player_runs_unders) |>
   select(
     match,
-    market_name,
+    market = market_name,
     home_team = home,
     away_team = away,
-    player,
+    player_name,
     player_team,
-    oppposition_team,
+    opposition_team,
     line,
     over_price,
     under_price
-  )
+  ) |> 
+  mutate(agency = "TAB")
   
 #==============================================================================
 # Player Runs Alternate Lines
@@ -161,53 +205,50 @@ player_runs_over_under <-
 # Filter to player runs alt line markets
 player_runs_alt <-
   all_tab_markets |>
-  filter(str_detect(market_name, "To Score")) |>
+  filter(str_detect(market_name, "^To Score")) |>
   mutate(match = str_replace_all(match, "AdelaideStrikers", "Adelaide Strikers")) |>
   mutate(match = str_replace_all(match, "Melb Renegades", "Melbourne Renegades")) |>
   mutate(line = str_extract(market_name, "\\d+")) |>
   mutate(line = as.numeric(line) - 0.5) |>
-  mutate(player = str_remove(prop_name, " \\(.*\\)")) |>
-  separate(player,
-           into = c("first_name", "last_name"),
-           sep = " ") |>
-  mutate(first_initial = str_sub(first_name, 1, 1)) |>
-  mutate(player = paste(first_initial, last_name, sep = " ")) |>
+  mutate(player_name = str_remove(prop_name, " \\(.*\\)")) |>
   mutate(
-    player = case_when(
-      player == "G Harris" ~ "GM Harris",
-      player == "C Athapthu" ~ "AC Jayangani",
-      player == "K Mack" ~ "KM Mack",
-      player == "S Devine" ~ "SFM Devine",
-      player == "B Mooney" ~ "BL Mooney",
-      player == "H Mathews" ~ "HK Matthews",
-      player == "T Beaumont" ~ "TT Beaumont",
-      player == "M Bouchier" ~ "ME Bouchier",
-      player == "S Dunkley" ~ "SIR Dunkley",
-      .default = player
+    player_name = case_when(
+      player_name == "Tom Rogers" ~ "Tom F Rogers",
+      player_name == "Jake Fraser McGurk" ~ "Jake Fraser-McGurk",
+      .default = player_name
     )
   ) |>
-  left_join(bbl_player_names_23) |>
-  rename(over_price = price, player_team = team) |>
+  left_join(player_teams[,c("player_name", "player_team")]) |> 
+  rename(over_price = price) |>
   separate(
     match,
     into = c("home", "away"),
     sep = " v ",
     remove = FALSE
   ) |>
-  mutate(oppposition_team = case_when(player_team == home ~ away,
-                                      player_team == away ~ home)) |>
-  select(
+  mutate(opposition_team = case_when(player_team == home ~ away,
+                                       player_team == away ~ home)) |>
+  transmute(
     match,
-    market_name,
+    market = "Player Runs",
     home_team = home,
     away_team = away,
-    player,
+    player_name,
     player_team,
-    oppposition_team,
+    opposition_team,
     line,
     over_price
   )
 
+# Combine all player runs and write out-----------------------------------------
+player_runs <-
+  player_runs_over_under |>
+  bind_rows(player_runs_alt) |>
+  mutate(agency = "TAB") |> 
+  arrange(match, player_name, line)
+
+player_runs |>
+  write_csv("Data/scraped_odds/tab_player_runs.csv")
 
 #==============================================================================
 # Player Wickets Alternate Lines
@@ -216,51 +257,45 @@ player_runs_alt <-
 # Filter to player wickets alt line markets
 player_wickets_alt <-
   all_tab_markets |>
-  filter(str_detect(market_name, "To Take")) |>
+  filter(str_detect(market_name, "^To Take")) |>
+  mutate(market_name = str_replace(market_name, " A ", " 1+ ")) |> 
   mutate(match = str_replace_all(match, "AdelaideStrikers", "Adelaide Strikers")) |>
   mutate(match = str_replace_all(match, "Melb Renegades", "Melbourne Renegades")) |>
-  mutate(market_name = str_replace(market_name, "To Take A Wicket", "To Take 1+ Wickets")) |> 
   mutate(line = str_extract(market_name, "\\d+")) |>
   mutate(line = as.numeric(line) - 0.5) |>
-  mutate(player = str_remove(prop_name, " \\(.*\\)")) |>
-  separate(player,
-           into = c("first_name", "last_name"),
-           sep = " ") |>
-  mutate(first_initial = str_sub(first_name, 1, 1)) |>
-  mutate(player = paste(first_initial, last_name, sep = " ")) |>
+  mutate(player_name = str_remove(prop_name, " \\(.*\\)")) |>
   mutate(
-    player = case_when(
-      player == "A Edgar" ~ "AL Edgar",
-      player == "A Kerr" ~ "AC Kerr",
-      player == "H Darlington" ~ "HJ Darlington",
-      player == "J Jonassen" ~ "JL Jonassen",
-      player == "M Schutt" ~ "ML Schutt",
-      player == "S Coyte" ~ "SJ Coyte",
-      player == "H Mathews" ~ "HK Matthews",
-      .default = player
+    player_name = case_when(
+      player_name == "Matthew Kuhnemann" ~ "Matt Kuhnemann",
+      .default = player_name
     )
   ) |>
-  left_join(bbl_player_names_23) |>
-  rename(over_price = price, player_team = team) |>
+  left_join(player_teams[,c("player_name", "player_team")]) |> 
+  rename(over_price = price) |>
   separate(
     match,
     into = c("home", "away"),
     sep = " v ",
     remove = FALSE
   ) |>
-  mutate(oppposition_team = case_when(player_team == home ~ away,
+  mutate(opposition_team = case_when(player_team == home ~ away,
                                       player_team == away ~ home)) |>
-  select(
+  transmute(
     match,
-    market_name,
+    market = "Player Wickets",
     home_team = home,
     away_team = away,
-    player,
+    player_name,
     player_team,
-    oppposition_team,
+    opposition_team,
     line,
-    over_price
+    over_price,
+    agency = "TAB"
   )
+
+# Combine all player wickets and write out-----------------------------------------
+player_wickets_alt |> 
+  write_csv("Data/scraped_odds/tab_player_wickets.csv")
 
 #==============================================================================
 # Player Boundaries Alternate Lines
@@ -270,51 +305,44 @@ player_wickets_alt <-
 player_boundaries_alt <-
   all_tab_markets |>
   filter(str_detect(market_name, "To Hit")) |>
+  filter(str_detect(market_name, "To Hit a Four and a Six", negate = TRUE)) |>
+  mutate(market_name = str_replace(market_name, " A ", " 1+ ")) |> 
   mutate(match = str_replace_all(match, "AdelaideStrikers", "Adelaide Strikers")) |>
   mutate(match = str_replace_all(match, "Melb Renegades", "Melbourne Renegades")) |>
-  mutate(market_name = str_replace(market_name, "To Hit A Four", "To Hit 1+ Fours")) |> 
-  mutate(market_name = str_replace(market_name, "To Hit A Six", "To Hit 1+ Sixes")) |>
   mutate(line = str_extract(market_name, "\\d+")) |>
   mutate(line = as.numeric(line) - 0.5) |>
-  mutate(player = str_remove(prop_name, " \\(.*\\)")) |>
-  separate(player,
-           into = c("first_name", "last_name"),
-           sep = " ") |>
-  mutate(first_initial = str_sub(first_name, 1, 1)) |>
-  mutate(player = paste(first_initial, last_name, sep = " ")) |>
+  mutate(player_name = str_remove(prop_name, " \\(.*\\)")) |>
   mutate(
-    player = case_when(
-      player == "G Harris" ~ "GM Harris",
-      player == "C Athapthu" ~ "AC Jayangani",
-      player == "K Mack" ~ "KM Mack",
-      player == "S Devine" ~ "SFM Devine",
-      player == "B Mooney" ~ "BL Mooney",
-      player == "H Mathews" ~ "HK Matthews",
-      player == "T Beaumont" ~ "TT Beaumont",
-      player == "M Bouchier" ~ "ME Bouchier",
-      player == "S Dunkley" ~ "SIR Dunkley",
-      .default = player
+    player_name = case_when(
+      player_name == "Tom Rogers" ~ "Tom F Rogers",
+      player_name == "Jake Fraser McGurk" ~ "Jake Fraser-McGurk",
+      .default = player_name
     )
   ) |>
-  left_join(bbl_player_names_23) |>
-  rename(over_price = price, player_team = team) |>
+  left_join(player_teams[,c("player_name", "player_team")]) |> 
+  rename(over_price = price) |>
   separate(
     match,
     into = c("home", "away"),
     sep = " v ",
     remove = FALSE
   ) |>
-  mutate(oppposition_team = case_when(player_team == home ~ away,
+  mutate(opposition_team = case_when(player_team == home ~ away,
                                       player_team == away ~ home)) |>
-  select(
+  mutate(market_name = if_else(str_detect(market_name, "Four"), "Number of 4s", "Number of 6s")) |>
+  transmute(
     match,
-    market_name,
+    market = market_name,
     home_team = home,
     away_team = away,
-    player,
+    player_name,
     player_team,
-    oppposition_team,
+    opposition_team,
     line,
-    over_price
+    over_price,
+    agency = "TAB"
   )
 
+# Combine all player boundaries and write out-----------------------------------------
+player_boundaries_alt |> 
+  write_csv("Data/scraped_odds/tab_player_boundaries.csv")

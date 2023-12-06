@@ -266,7 +266,8 @@ player_runs <-
     under_price,
     agency
   ) |> 
-  arrange(player_name, line)
+  arrange(player_name, line) |> 
+  distinct(match, player_name, player_team, opposition_team, line, over_price, under_price, .keep_all = TRUE)
 
 player_runs |> 
   write_csv("Data/scraped_odds/topsport_player_runs.csv")
@@ -412,7 +413,7 @@ player_fours_alternate <-
   mutate(player_name = ifelse(player_name == "Nathan Coulter Nile", "Nathan Coulter-Nile", player_name)) |>
   left_join(player_teams[,c("player_name", "player_team")]) |> 
   left_join(all_matches, by = c("player_team" = "team", "match")) |> 
-  mutate(market_name = "Player Fours", agency = "TopSport") |>
+  mutate(market_name = "Number of 4s", agency = "TopSport") |>
   select(match, start_date, market_name, player_name, line, over_price, agency)
 
 # Get data for pick your own sixes----------------------------------------------
@@ -437,8 +438,49 @@ player_sixes_alternate <-
   mutate(player_name = ifelse(player_name == "Nathan Coulter Nile", "Nathan Coulter-Nile", player_name)) |>
   left_join(player_teams[,c("player_name", "player_team")]) |> 
   left_join(all_matches, by = c("player_team" = "team", "match")) |> 
-  mutate(market_name = "Player Sixes", agency = "TopSport") |>
+  mutate(market_name = "Number of 6s", agency = "TopSport") |>
   select(match, start_date, market_name, player_name, line, over_price, agency)
+
+# Write out all player boundaries
+player_boundaries <- 
+  player_fours_alternate |>
+  bind_rows(player_sixes_alternate) |>
+  mutate(over_price = as.numeric(over_price)) |>
+  mutate(agency = "TopSport") |>
+  separate(
+    match,
+    into = c("home_team", "away_team"),
+    sep = " v ",
+    remove = FALSE
+  ) |>
+  left_join(player_teams[, c("player_name", "player_team")], by = "player_name") |>
+  mutate(
+    opposition_team = case_when(
+      player_team == home_team ~ away_team,
+      player_team == away_team ~ home_team
+    )
+  ) |>
+  select(
+    match,
+    market = market_name,
+    home_team,
+    away_team,
+    player_name,
+    player_team,
+    opposition_team,
+    line,
+    over_price,
+    agency
+  ) |> 
+  arrange(player_name, line) |> 
+  distinct(match, player_name, player_team, opposition_team, line, over_price, .keep_all = TRUE)
+
+player_boundaries |> 
+  write_csv("Data/scraped_odds/topsport_player_boundaries.csv")
+
+#===============================================================================
+# Run matchup handicaps
+#===============================================================================
 
 # Get data for run matchup handicaps----------------------------------------------
 

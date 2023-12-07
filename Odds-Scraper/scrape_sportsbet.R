@@ -8,7 +8,6 @@ library(glue)
 # URL of website
 sportsbet_url = "https://www.sportsbet.com.au/betting/cricket/twenty20-big-bash"
 
-
 # Get fixture and player team data
 player_teams <- read_csv("Data/supercoach-data.csv")
 fixture <- read_csv("Data/supercoach-fixture.csv")

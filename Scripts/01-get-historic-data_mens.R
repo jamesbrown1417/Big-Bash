@@ -55,6 +55,39 @@ ball_by_ball_data_bbl |>
   arrange(desc(runs_scored)) |> 
   rename(player = striker)
 
+# Get Batting Position
+batting_position_bbl_strikers <-
+  ball_by_ball_data_bbl |>
+  select(match_id, innings, striker, non_striker, bowler, over, ball, wickets_lost_yet) |>
+  group_by(match_id, innings, striker) |>
+  slice_head(n = 1) |>
+  mutate(player = striker, role = "Striker") |> 
+  ungroup() |> 
+  select(-striker, -non_striker)
+
+batting_position_bbl_non_strikers <-
+  ball_by_ball_data_bbl |>
+  select(match_id, innings, striker, non_striker, bowler, over, ball, wickets_lost_yet) |>
+  group_by(match_id, innings, non_striker) |>
+  slice_head(n = 1) |>
+  mutate(player = non_striker, role = "Non-Striker") |> 
+  ungroup() |> 
+  select(-striker, -non_striker)
+
+batting_position_bbl <-
+  bind_rows(batting_position_bbl_strikers, batting_position_bbl_non_strikers) |>
+  arrange(match_id, innings, over, ball, player, desc(role)) |>
+  group_by(match_id, innings, player) |>
+  slice_head(n = 1) |>
+  arrange(match_id, innings, over, ball, player, desc(role)) |>
+  group_by(match_id, innings) |> 
+  mutate(batting_position = row_number()) |>
+  select(match_id, innings, player, batting_position)
+  
+batting_stats_bbl <-
+  batting_stats_bbl |> 
+  left_join(batting_position_bbl, by = c("match_id", "innings", "player"))
+
 # Bowling stats
 bowling_stats_bbl <-
   ball_by_ball_data_bbl |> 
@@ -76,6 +109,57 @@ bowling_stats_bbl <-
 ####                  Write out as RDS                  ####
 #                                                          #
 ##%######################################################%##
+
+# Standardise Venue Names
+batting_stats_bbl <-
+  batting_stats_bbl |>
+  mutate(venue = case_when(
+    str_detect(venue, "Brisbane Cricket Ground") ~ "The Gabba",
+    str_detect(venue, "Sydney Cricket Ground") ~ "SCG",
+    str_detect(venue, "Adelaide Oval") ~ "Adelaide Oval",
+    str_detect(venue, "Manuka Oval") ~ "Manuka Oval",
+    str_detect(venue, "Melbourne Cricket Ground") ~ "MCG",
+    str_detect(venue, "Perth Stadium") ~ "Perth Stadium",
+    str_detect(venue, "Blundstone Arena") ~ "Blundstone Arena",
+    str_detect(venue, "Docklands") ~ "Marvel Stadium",
+    str_detect(venue, "Marvel Stadium") ~ "Marvel Stadium",
+    str_detect(venue, "International Sports Stadium") ~ "Coffs Harbour",
+    str_detect(venue, "Sydney Showground Stadium") ~ "Sydney Showground Stadium",
+    str_detect(venue, "Carrara Oval") ~ "Carrara Oval",
+    str_detect(venue, "Adelaide Oval") ~ "Adelaide Oval",
+    str_detect(venue, "Traeger Park") ~ "Traeger Park",
+    str_detect(venue, "Metricon Stadium") ~ "Metricon Stadium",
+    str_detect(venue, "University of Tasmania Stadium") ~ "University of Tasmania Stadium",
+    str_detect(venue, "(UTAS)|(Aurora)") ~ "University of Tasmania Stadium",
+    str_detect(venue, "Bellerive") ~ "Bellerive Oval",
+    str_detect(venue, "Simonds|Kardinia|GMHBA") ~ "GMHBA Stadium",
+    str_detect(venue, "Western Australia Cricket Association Ground|W\\.A\\.C\\.A") ~ "WACA",
+    TRUE ~ venue))
+
+bowling_stats_bbl <-
+  bowling_stats_bbl |>
+  mutate(venue = case_when(
+    str_detect(venue, "Brisbane Cricket Ground") ~ "The Gabba",
+    str_detect(venue, "Sydney Cricket Ground") ~ "SCG",
+    str_detect(venue, "Adelaide Oval") ~ "Adelaide Oval",
+    str_detect(venue, "Manuka Oval") ~ "Manuka Oval",
+    str_detect(venue, "Melbourne Cricket Ground") ~ "MCG",
+    str_detect(venue, "Perth Stadium") ~ "Perth Stadium",
+    str_detect(venue, "Blundstone Arena") ~ "Blundstone Arena",
+    str_detect(venue, "Docklands") ~ "Marvel Stadium",
+    str_detect(venue, "Marvel Stadium") ~ "Marvel Stadium",
+    str_detect(venue, "International Sports Stadium") ~ "Coffs Harbour",
+    str_detect(venue, "Sydney Showground Stadium") ~ "Sydney Showground Stadium",
+    str_detect(venue, "Carrara Oval") ~ "Carrara Oval",
+    str_detect(venue, "Adelaide Oval") ~ "Adelaide Oval",
+    str_detect(venue, "Traeger Park") ~ "Traeger Park",
+    str_detect(venue, "Metricon Stadium") ~ "Metricon Stadium",
+    str_detect(venue, "University of Tasmania Stadium") ~ "University of Tasmania Stadium",
+    str_detect(venue, "(UTAS)|(Aurora)") ~ "University of Tasmania Stadium",
+    str_detect(venue, "Bellerive") ~ "Bellerive Oval",
+    str_detect(venue, "Simonds|Kardinia|GMHBA") ~ "GMHBA Stadium",
+    str_detect(venue, "Western Australia Cricket Association Ground|W\\.A\\.C\\.A") ~ "WACA",
+    TRUE ~ venue))
 
 # Write out data
 write_rds(bowling_stats_bbl, "Data/bowling_stats_bbl.rds")

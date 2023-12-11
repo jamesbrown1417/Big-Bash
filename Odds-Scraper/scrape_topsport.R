@@ -227,6 +227,7 @@ if (length(player_runs_markets) > 0) {
     mutate(market_name = "Player Runs") |> 
     mutate(agency = "TopSport") |> 
     mutate(player_name = ifelse(player_name == "Jake Fraser McGurk", "Jake Fraser-McGurk", player_name)) |> 
+    mutate(player_name = ifelse(player_name == "DArcy Short", "D'Arcy Short", player_name)) |>
     left_join(player_teams[,c("player_name", "player_team")]) |> 
     left_join(all_matches, by = c("player_team" = "team")) |>
     select(match, start_date, market_name, player_name, line, over_price, under_price, agency)
@@ -296,6 +297,7 @@ player_wickets_alternate <-
 player_wickets_alternate <-
   player_wickets_alternate |> 
   mutate(player_name = ifelse(player_name == "Nathan Coulter Nile", "Nathan Coulter-Nile", player_name)) |>
+  mutate(player_name = ifelse(player_name == "DArcy Short", "D'Arcy Short", player_name)) |>
   left_join(player_teams[,c("player_name", "player_team")]) |> 
   left_join(all_matches, by = c("player_team" = "team", "match")) |> 
   mutate(market_name = "Player Wickets", agency = "TopSport") |>
@@ -411,6 +413,7 @@ player_fours_alternate <-
 player_fours_alternate <-
   player_fours_alternate |> 
   mutate(player_name = ifelse(player_name == "Nathan Coulter Nile", "Nathan Coulter-Nile", player_name)) |>
+  mutate(player_name = ifelse(player_name == "DArcy Short", "D'Arcy Short", player_name)) |>
   left_join(player_teams[,c("player_name", "player_team")]) |> 
   left_join(all_matches, by = c("player_team" = "team", "match")) |> 
   mutate(market_name = "Number of 4s", agency = "TopSport") |>
@@ -436,6 +439,7 @@ player_sixes_alternate <-
 player_sixes_alternate <-
   player_sixes_alternate |> 
   mutate(player_name = ifelse(player_name == "Nathan Coulter Nile", "Nathan Coulter-Nile", player_name)) |>
+  mutate(player_name = ifelse(player_name == "DArcy Short", "D'Arcy Short", player_name)) |>
   left_join(player_teams[,c("player_name", "player_team")]) |> 
   left_join(all_matches, by = c("player_team" = "team", "match")) |> 
   mutate(market_name = "Number of 6s", agency = "TopSport") |>

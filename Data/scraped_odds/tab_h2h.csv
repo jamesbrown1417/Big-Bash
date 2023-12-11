@@ -1,13 +1,7 @@
 match,start_time,market_name,prop_name,price
-Brisbane Heat v Melbourne Stars,2023-12-07T08:15:00.000Z,Head To Head,Brisbane Heat,1.77
-Brisbane Heat v Melbourne Stars,2023-12-07T08:15:00.000Z,Head To Head,Melbourne Stars,2.05
-Sydney Sixers v Melbourne Renegades,2023-12-08T08:15:00.000Z,Head To Head,Sydney Sixers,1.6
-Sydney Sixers v Melbourne Renegades,2023-12-08T08:15:00.000Z,Head To Head,Melbourne Renegades,2.35
-Adelaide Strikers v Brisbane Heat,2023-12-09T08:15:00.000Z,Head To Head,Adelaide Strikers,2
-Adelaide Strikers v Brisbane Heat,2023-12-09T08:15:00.000Z,Head To Head,Brisbane Heat,1.8
-Melbourne Renegades v Perth Scorchers,2023-12-10T08:15:00.000Z,Head To Head,Melbourne Renegades,2.6
-Melbourne Renegades v Perth Scorchers,2023-12-10T08:15:00.000Z,Head To Head,Perth Scorchers,1.5
-Hobart Hurricanes v Sydney Sixers,2023-12-11T08:15:00.000Z,Head To Head,Hobart Hurricanes,2.15
-Hobart Hurricanes v Sydney Sixers,2023-12-11T08:15:00.000Z,Head To Head,Sydney Sixers,1.7
-Sydney Thunder v Brisbane Heat,2023-12-12T08:15:00.000Z,Head To Head,Sydney Thunder,2.25
-Sydney Thunder v Brisbane Heat,2023-12-12T08:15:00.000Z,Head To Head,Brisbane Heat,1.65
+Hobart Hurricanes v Sydney Sixers,2023-12-11T08:15:00.000Z,Head To Head,Hobart Hurricanes,1.8
+Hobart Hurricanes v Sydney Sixers,2023-12-11T08:15:00.000Z,Head To Head,Sydney Sixers,2
+Sydney Thunder v Brisbane Heat,2023-12-12T08:15:00.000Z,Head To Head,Sydney Thunder,2
+Sydney Thunder v Brisbane Heat,2023-12-12T08:15:00.000Z,Head To Head,Brisbane Heat,1.8
+Melbourne Stars v Perth Scorchers,2023-12-13T08:15:00.000Z,Head To Head,Melbourne Stars,2.65
+Melbourne Stars v Perth Scorchers,2023-12-13T08:15:00.000Z,Head To Head,Perth Scorchers,1.48

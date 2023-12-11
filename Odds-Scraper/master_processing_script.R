@@ -3,6 +3,8 @@
 #===============================================================================
 
 library(tidyverse)
+library(googlesheets4)
+library(googledrive)
 `%notin%` <- Negate(`%in%`)
 
 # Directory of scraped odds data
@@ -25,6 +27,15 @@ run_scraping("Odds-Scraper/scrape_sportsbet.R")
 run_scraping("Odds-Scraper/scrape_TAB.R")
 run_scraping("Odds-Scraper/scrape_topsport.R")
 run_scraping("Odds-Scraper/scrape_pointsbet.R")
+run_scraping("Odds-Scraper/scrape_neds.R")
+run_scraping("Odds-Scraper/scrape_bluebet.R")
+run_scraping("Odds-Scraper/scrape_betright.R")
+
+# Google sheets authentification -----------------------------------------------
+options(gargle_oauth_cache = ".secrets")
+drive_auth(cache = ".secrets", email = "cuzzy.punting@gmail.com")
+gs4_auth(token = drive_token())
+sheet <- gs4_find("Big Bash Data")
 
 #===============================================================================
 # Player Runs Data
@@ -79,11 +90,15 @@ player_runs_data <-
          empirical_prob_over = round(empirical_prob_over, 2),
          empirical_prob_under = round(empirical_prob_under, 2),
          diff_over = round(diff_over, 2),
-         diff_under = round(diff_under, 2))
+         diff_under = round(diff_under, 2)) |> 
+  distinct(player_name, line, agency, over_price, .keep_all = TRUE)
 
 # Write out data----------------------------------------------------------------
 player_runs_data |> 
   write_rds("Data/processed_odds/all_player_runs.rds")
+
+# Add to google sheets
+sheet_write(sheet, data = player_runs_data, sheet = "Player Runs")
 
 #===============================================================================
 # Player Wickets Data
@@ -137,11 +152,15 @@ player_wickets_data <-
          empirical_prob_over = round(empirical_prob_over, 2),
          empirical_prob_under = round(empirical_prob_under, 2),
          diff_over = round(diff_over, 2),
-         diff_under = round(diff_under, 2))
+         diff_under = round(diff_under, 2)) |> 
+  distinct(player_name, line, agency, over_price, .keep_all = TRUE)
 
 # Write out data----------------------------------------------------------------
 player_wickets_data |> 
   write_rds("Data/processed_odds/all_player_wickets.rds")
+
+# Add to google sheets
+sheet_write(sheet, data = player_wickets_data, sheet = "Player Wickets")
 
 #===============================================================================
 # Player Fours
@@ -248,9 +267,14 @@ player_sixes_data <-
          empirical_prob_over = round(empirical_prob_over, 2),
          empirical_prob_under = round(empirical_prob_under, 2),
          diff_over = round(diff_over, 2),
-         diff_under = round(diff_under, 2))
+         diff_under = round(diff_under, 2)) |> 
+  distinct(player_name, market, line, agency, over_price, .keep_all = TRUE)
+
 
 # Write out data----------------------------------------------------------------
 player_fours_data |> 
   bind_rows(player_sixes_data) |>
   write_rds("Data/processed_odds/all_player_boundaries.rds")
+
+# Add to google sheets
+sheet_write(sheet, data = player_fours_data |> bind_rows(player_sixes_data) , sheet = "Player Boundaries")

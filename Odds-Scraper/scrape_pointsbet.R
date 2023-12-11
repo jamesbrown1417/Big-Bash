@@ -324,6 +324,8 @@ pointsbet_h2h_main <- function() {
     separate(match, into = c("away_team", "home_team"), sep = " v ", remove = FALSE) |> 
     mutate(outcome = case_when(outcome == "Matthew Kuhnemann" ~ "Matt Kuhnemann",
                                outcome == "Mitch Swepson" ~ "Mitchell Swepson",
+                               outcome == "Tom S. Rogers" ~ "Tom Rogers",
+                               outcome == "Andrew tye" ~ "Andrew Tye",
                                .default = outcome)) |>
     left_join(player_teams[, c("player_name", "player_team")], by = c("outcome" = "player_name")) |>
     mutate(opposition_team = if_else(home_team == player_team, away_team, home_team)) |>
@@ -346,6 +348,34 @@ pointsbet_h2h_main <- function() {
   #===============================================================================
   # Player Boundaries
   #===============================================================================
+  
+  # Player fours alternative totals----------------------------------------------
+  
+  # Filter list to player fours
+  pointsbet_player_fours_lines <-
+    pointsbet_data_player_props |>
+    filter(str_detect(market, "Pick Your Own Fours")) |>
+    mutate(line = str_extract(outcome, "[0-9]{1,3}")) |>
+    mutate(line = as.numeric(line) - 0.5) |>
+    mutate(match = str_replace(match, "@", "v")) |> 
+    mutate(outcome = str_remove(outcome, " To Hit.*$")) |> 
+    separate(match, into = c("away_team", "home_team"), sep = " v ", remove = FALSE) |> 
+    mutate(outcome = case_when(outcome == "Tom Rogers" ~ "Tom F Rogers",
+                               outcome == "Steven Smith" ~ "Steve Smith",
+                               .default = outcome)) |>
+    left_join(player_teams[, c("player_name", "player_team")], by = c("outcome" = "player_name")) |>
+    mutate(opposition_team = if_else(home_team == player_team, away_team, home_team)) |>
+    transmute(
+      match,
+      home_team,
+      away_team,
+      market = "Number of 4s",
+      player_name = outcome,
+      player_team,
+      opposition_team,
+      line,
+      over_price = price,
+      agency = "Pointsbet")
   
   # Player sixes alternative totals----------------------------------------------
   
@@ -377,6 +407,7 @@ pointsbet_h2h_main <- function() {
   
   # Write to csv----------------------------------------------------------------
   pointsbet_player_sixes_lines |> 
+    bind_rows(pointsbet_player_fours_lines) |> 
     write_csv("Data/scraped_odds/pointsbet_player_boundaries.csv")
   
 }
